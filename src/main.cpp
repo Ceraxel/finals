@@ -16,28 +16,29 @@ struct Student {
     string year_level;
 };
 
-class Node {
-public:
+struct Node {
     Student data;
     Node* next;
     Node* prev;
 };
 
-enum class Mode {DISPLAY, DELETE};
+enum class Action {DISPLAY, DELETE};
+enum class Search {ID, NAME};
 
 class Records {
 public:
     Records();
+    void ask_input();
     void add_record(Student student);
     void delete_record();
     void display_specific(); 
     void display_records(const Node* record); 
 
-    void ask_input();
+    Search ask_search_method();
+    Node* search_record(Action search_mode, Search search_method);
+    void print(const Student* student); 
     bool is_id_duplicate(Student student);
     bool is_id_invalid(Student student);
-    Node* search_record(Mode search_mode);
-    void print(const Student* student); 
     void export_to_txt(); 
 
     Node* get_head_node() const;
@@ -47,13 +48,11 @@ private:
     Node* tail; 
 };
 
-
 // Forward declaration of functions
 int menu_input();
 void clear();
 void pause();
 void clear_err();
-
 
 // Main
 int main() {
@@ -65,17 +64,13 @@ int main() {
         clear();
         switch (choice) {
             case 1: 
-                student_list.ask_input();
-                break;
+                student_list.ask_input(); break;
             case 2: 
-                student_list.display_specific();
-                break;
+                student_list.display_specific(); break;
             case 3:
-                student_list.display_records(student_list.get_head_node());
-                break;
+                student_list.display_records(student_list.get_head_node()); break;
             case 4: 
-                student_list.delete_record();
-                break;
+                student_list.delete_record(); break;
             case 5:
                 return 0;
             default:
@@ -84,6 +79,29 @@ int main() {
         pause();
     }
     return 0;
+}
+
+// Constructor for the Records class
+// Populate the list by reading data from records.txt and adding it to records
+Records::Records() { 
+    head = nullptr;
+    tail = nullptr;
+
+    ifstream inf { "records.txt" };
+    string place_holder;
+    while (inf.peek() != EOF) {
+        Student student;
+        getline(inf, student.id_number);
+        getline(inf, student.full_name);
+        getline(inf, student.birthday);
+        getline(inf, student.address);
+        getline(inf, student.gender);
+        getline(inf, student.degree_prog);
+        getline(inf, student.year_level);
+        add_record(student);
+        // Capture new line since each record is separated with new line in records.txt
+        getline(inf, place_holder);
+    }
 }
 
 //   Function definitions
@@ -110,29 +128,6 @@ int menu_input() {
 
         // Otherwise, clear the error and continue the loop
         clear_err();
-    }
-}
-
-// Constructor for the record class
-// Populate the list by reading data from records.txt and adding it to records
-Records::Records() { 
-    head = nullptr;
-    tail = nullptr;
-
-    ifstream inf { "records.txt" };
-    string place_holder;
-    while (inf.peek() != EOF) {
-        Student student;
-        getline(inf, student.id_number);
-        getline(inf, student.full_name);
-        getline(inf, student.birthday);
-        getline(inf, student.address);
-        getline(inf, student.gender);
-        getline(inf, student.degree_prog);
-        getline(inf, student.year_level);
-        add_record(student);
-        // Capture new line
-        getline(inf, place_holder);
     }
 }
 
@@ -196,79 +191,9 @@ void Records::add_record(Student student) {
     export_to_txt();
 }
 
-Node* Records::search_record(Mode search_mode) {
-    int search_by;
-    string input;
-    while (true) {
-        cout << "----------------------------------------------------------" << '\n';
-        cout << "                       Search by\n";
-        cout << "----------------------------------------------------------" << '\n';
-        cout << "\t[ 1 ] - Student ID\n";
-        cout << "\t[ 2 ] - Name\n";
-        cout << "----------------------------------------------------------" << '\n';
-        cout << "Choice: ";
-
-        cin >> search_by;
-
-        if (cin && (search_by == 1 || search_by == 2))
-            break;
-
-        clear_err();
-    }
-    cout << "Search Key: ";
-    getline(cin >> ws, input);
-
-    clear();
-
-    Node* traverse = get_head_node();
-    Node* result_head = nullptr;
-    Node* result = nullptr;
-
-    string target;
-    while (traverse != nullptr) {
-        target = (search_by == 1) ? traverse->data.id_number : traverse->data.full_name;
-
-        if (target != input && search_mode == Mode::DELETE) {
-            traverse = traverse->next;
-            continue;
-        }
-
-        if (search_mode == Mode::DELETE) {
-            result_head = traverse;
-            break;
-        }
-
-        // If the current record does not contain the substring, proceed to next iteration
-        if (target.find(input) == string::npos){
-            traverse = traverse->next;
-            continue;
-        }
-
-
-        // If it does contain the substring, create a new node and copy the data of the current node to it
-        Node* tmp = new Node();
-        tmp->data = traverse->data;
-        tmp->next = nullptr;
-
-        if (result == nullptr) {
-            result = tmp;
-            result_head = result;
-        } else {
-            result->next = tmp;
-            result = result->next;
-        }
-
-        traverse = traverse->next;
-    }
-
-    if (result != nullptr)
-        result->next = nullptr;
-
-    return result_head;
-}
-
 void Records::delete_record() {
-    Node* record = search_record(Mode::DELETE);
+    Search search_method = ask_search_method();
+    Node* record = search_record(Action::DELETE, search_method);
     if (record == nullptr)
         return;
 
@@ -288,6 +213,20 @@ void Records::delete_record() {
     }
 
     export_to_txt();
+
+    cout << "Record deleted";
+    pause();
+}
+
+void Records::display_specific() {
+    Search search_method = ask_search_method();
+    Node* result = search_record(Action::DISPLAY, search_method);
+    cout << flush;
+    if (result == nullptr) {
+        cout << "Record not found";
+        return;
+    }
+    display_records(result);
 }
 
 void Records::display_records(const Node* record) {
@@ -302,24 +241,89 @@ void Records::display_records(const Node* record) {
     cout << setw(10) << "Year Level "    << "|\n";
     cout << setfill('-') << setw(157) << "-" << '\n' << setfill(' ');
 
-    if (head == nullptr)
+    // If there is no record, display "No Records"
+    if (record == nullptr)
         std::cout << setw(78) << "|" << setw(78) << "No Records" << "|\n";
 
+    // Otherwise, iterate through the records and display each record
     while (record != nullptr) {
         print(&record->data);
         record = record->next;
     }
+
     cout << setfill('-') << setw(157) << "-" << '\n' << setfill(' ');
 }
 
-void Records::display_specific() {
-    Node* result = search_record(Mode::DISPLAY);
-    cout << flush;
-    if (result == nullptr) {
-        cout << "Record not found";
-        return;
+Search Records::ask_search_method() {
+    int method;
+    while (true) {
+        cout << "----------------------------------------------------------" << '\n';
+        cout << "                       Search by\n";
+        cout << "----------------------------------------------------------" << '\n';
+        cout << "\t[ 1 ] - Student ID\n";
+        cout << "\t[ 2 ] - Name\n";
+        cout << "----------------------------------------------------------" << '\n';
+        cout << "Choice: ";
+
+        cin >> method;
+
+        if (cin && (method == 1 || method == 2))
+            break;
+        clear_err();
     }
-    display_records(result);
+
+    return (method == 1) ? Search::ID : Search::NAME;
+}
+
+Node* Records::search_record(Action action, Search search_method) {
+    string input;
+    cout << "Search Key: ";
+    getline(cin >> ws, input);
+    clear();
+
+    Node* traverse = get_head_node();
+    Node* result_head = nullptr;
+    Node* result = nullptr;
+    string target;
+
+    // The loop that runs when the search action is DELETE
+    while (traverse != nullptr && action == Action::DELETE) {
+        target = (search_method == Search::ID) ? traverse->data.id_number : traverse->data.full_name;
+
+        if (target == input) {
+            result_head = traverse;
+            break;
+        }
+
+        traverse = traverse->next;
+    }
+
+    // The loop that runs when the search action is DISPLAY
+    while (traverse != nullptr && action == Action::DISPLAY) {
+        target = (search_method == Search::ID) ? traverse->data.id_number : traverse->data.full_name;
+        // If the current record does not contain the substring, proceed to next iteration
+        if (target.find(input) == string::npos){
+            traverse = traverse->next;
+            continue;
+        }
+
+        // If it does contain the substring, create a new node and copy the data of the current node to it
+        Node* tmp = new Node();
+        tmp->data = traverse->data;
+        tmp->next = nullptr;
+
+        if (result == nullptr) {
+            result = tmp;
+            result_head = result;
+        } else {
+            result->next = tmp;
+            result = result->next;
+        }
+
+        traverse = traverse->next;
+    }
+
+    return result_head;
 }
 
 void Records::print(const Student* student) {
@@ -333,22 +337,6 @@ void Records::print(const Student* student) {
     cout << setw(10) << student->year_level  << " |\n";
 }
 
-void Records::export_to_txt() {
-    ofstream outf { "records.txt" };
-    Node* tmp = head;
-    while(tmp != nullptr) {
-        outf << tmp->data.id_number << '\n';
-        outf << tmp->data.full_name << '\n';
-        outf << tmp->data.birthday << '\n';
-        outf << tmp->data.address << '\n';
-        outf << tmp->data.gender << '\n';
-        outf << tmp->data.degree_prog << '\n';
-        outf << tmp->data.year_level << '\n';
-        outf << '\n';
-        tmp = tmp->next;
-    }
-    outf.close();
-}
 
 bool Records::is_id_duplicate(Student student) {
     Node* tmp = head;
@@ -369,9 +357,29 @@ bool Records::is_id_invalid(Student student) {
     return false;
 } 
 
+Node* Records::get_head_node() const {
+    Node* tmp = head;
+    return tmp;
+}
+
+void Records::export_to_txt() {
+    ofstream outf { "records.txt" };
+    Node* tmp = head;
+    while(tmp != nullptr) {
+        outf << tmp->data.id_number << '\n';
+        outf << tmp->data.full_name << '\n';
+        outf << tmp->data.birthday << '\n';
+        outf << tmp->data.address << '\n';
+        outf << tmp->data.gender << '\n';
+        outf << tmp->data.degree_prog << '\n';
+        outf << tmp->data.year_level << '\n';
+        outf << '\n';
+        tmp = tmp->next;
+    }
+    outf.close();
+}
 
 // Utilities
-
 void clear() {
     #ifdef __linux__
     system("clear");
@@ -391,8 +399,4 @@ void pause() {
 void clear_err() {
     cin.clear();
     cin.ignore(100, '\n');
-}
-Node* Records::get_head_node() const {
-    Node* tmp = head;
-    return tmp;
 }

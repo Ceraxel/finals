@@ -40,10 +40,7 @@ public:
     void print(const Student* student); 
     void export_to_txt(); 
 
-    Node* get_head_node() const {
-        Node* tmp = head;
-        return tmp;
-    }
+    Node* get_head_node() const;
 
 private:
     Node* head;
@@ -63,19 +60,28 @@ int main() {
     Records student_list; // Creates an instance of Records class
 
     while (true) {
-        system("clear");
+        clear();
         int choice = menu_input();
-        system("clear");
+        clear();
         switch (choice) {
-            case 1: student_list.ask_input();        break;
-            case 2: student_list.display_specific(); break;
-            case 3: student_list.display_records(student_list.get_head_node());      break;
-            case 4: student_list.delete_record();    break;
-            case 5: return 0;
+            case 1: 
+                student_list.ask_input();
+                break;
+            case 2: 
+                student_list.display_specific();
+                break;
+            case 3:
+                student_list.display_records(student_list.get_head_node());
+                break;
+            case 4: 
+                student_list.delete_record();
+                break;
+            case 5:
+                return 0;
             default:
                 continue;;
         }
-        system("read");
+        pause();
     }
     return 0;
 }
@@ -385,4 +391,8 @@ void pause() {
 void clear_err() {
     cin.clear();
     cin.ignore(100, '\n');
+}
+Node* Records::get_head_node() const {
+    Node* tmp = head;
+    return tmp;
 }

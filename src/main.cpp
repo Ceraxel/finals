@@ -147,7 +147,7 @@ void Records::ask_input() {
         cout << "----------------------------------------------------------" << '\n';
         cout << "Student ID No.: ";
         cin >> student.id_number;
-        cout << "Full name (LN, MI, FN): ";
+        cout << "Full name (LN, FN, MI): ";
         getline(cin >> ws, student.full_name);
         cout << "Birthday (MM/DD/YYYY): ";
         getline(cin >> ws, student.birthday);

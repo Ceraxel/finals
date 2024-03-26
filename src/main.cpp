@@ -338,7 +338,7 @@ Node* Records::search_record(Action action, Search search_method) {
     }
 
     // The loop that runs when the search action is DISPLAY
-    // Try to find all records that match the search key and add them to the result list
+    // Tries to find all records that match the search key and add them to the result list
     while (current_node != nullptr && action == Action::DISPLAY) {
         target = (search_method == Search::ID) ? current_node->data.id_number : current_node->data.full_name;
         // If the current record does not contain the substring, proceed to next iteration

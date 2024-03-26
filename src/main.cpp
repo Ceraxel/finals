@@ -328,12 +328,17 @@ Node* Records::search_record(Action action, Search search_method) {
     clear();
 
     Node* current_node = get_head_node();
-    Node* result = nullptr; // The list that gets iterated to store the records that match the search key
-    Node* result_head = nullptr; // The head node of the result list
+    //
+    // The list that gets iterated to store the records that 
+    // match the search key
+    Node* result = nullptr; 
+    // The head node of the result list
+    Node* result_head = nullptr; 
     string target;
 
     // The loop that runs when the search action is DELETE
-    // Tries to find the record that matches the search key and returns it for deletion
+    // Tries to find the record that matches the search key 
+    // and returns it for deletion
     while (current_node != nullptr && action == Action::DELETE) {
         target = (search_method == Search::ID) 
                ? current_node->data.id_number 
@@ -349,16 +354,22 @@ Node* Records::search_record(Action action, Search search_method) {
     }
 
     // The loop that runs when the search action is DISPLAY
-    // Tries to find all records that match the search key and add them to the result list
+    // Tries to find all records that match the search key 
+    // and add them to the result list
     while (current_node != nullptr && action == Action::DISPLAY) {
-        target = (search_method == Search::ID) ? current_node->data.id_number : current_node->data.full_name;
-        // If the current record does not contain the substring, proceed to next iteration
+        target = (search_method == Search::ID) 
+            ? current_node->data.id_number 
+            : current_node->data.full_name;
+
+        // If the current record does not contain the substring, 
+        // proceed to next iteration
         if (target.find(input) == string::npos){
             current_node = current_node->next;
             continue;
         }
 
-        // If it does contain the substring, create a new node and copy the data of the current node to it
+        // If it does contain the substring, create a new node and 
+        // copy the data of the current node to it
         Node* tmp = new Node();
         tmp->data = current_node->data;
         tmp->next = nullptr;
@@ -368,7 +379,8 @@ Node* Records::search_record(Action action, Search search_method) {
             result = tmp;
             result_head = result;
 
-        // Otherwise, set the new node as the next node of the last node in the result list
+        // Otherwise, set the new node as the next node 
+        // of the last node in the result list
         } else {
             result->next = tmp;
             result = result->next;

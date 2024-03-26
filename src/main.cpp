@@ -324,8 +324,8 @@ Node* Records::search_record(Action action, Search search_method) {
     clear();
 
     Node* current_node = get_head_node();
-    Node* result_head = nullptr;
-    Node* result = nullptr;
+    Node* result = nullptr; // The list that gets iterated to store the records that match the search key
+    Node* result_head = nullptr; // The head node of the result list
     string target;
 
     // The loop that runs when the search action is DELETE
@@ -338,6 +338,7 @@ Node* Records::search_record(Action action, Search search_method) {
             break;
         }
 
+        // Move to the next node in the records list
         current_node = current_node->next;
     }
 

@@ -56,7 +56,7 @@ void clear();
 void pause();
 void clear_err();
 
-// Main
+// Main function
 int main() {
     Records student_list; // Creates an instance of Records class
 
@@ -66,13 +66,17 @@ int main() {
         clear();
         switch (choice) {
             case 1: 
-                student_list.ask_input(); break;
+                student_list.ask_input(); 
+                break;
             case 2: 
-                student_list.display_specific(); break;
+                student_list.display_specific();
+                break;
             case 3:
-                student_list.display_records(student_list.get_head_node()); break;
+                student_list.display_records(student_list.get_head_node());
+                break;
             case 4: 
-                student_list.delete_record(); break;
+                student_list.delete_record();
+                break;
             case 5:
                 return 0;
             default:

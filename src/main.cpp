@@ -22,6 +22,8 @@ struct Node {
     Node* prev;
 };
 
+// Used to have intuitive names for the search and action 
+// methods instead of using numbers such as 0 and 1
 enum class Action {DISPLAY, DELETE};
 enum class Search {ID, NAME};
 
@@ -87,6 +89,7 @@ Records::Records() {
     head = nullptr;
     tail = nullptr;
 
+    // Read contents from records.txt and add it to the records list
     ifstream inf { "records.txt" };
     string place_holder;
     while (inf.peek() != EOF) {
@@ -105,6 +108,8 @@ Records::Records() {
 }
 
 //   Function definitions
+
+// Asks the user to input a choice from the menu
 int menu_input() {
     while (true) {
         clear();
@@ -131,6 +136,7 @@ int menu_input() {
     }
 }
 
+// Asks the user to input the student information
 void Records::ask_input() {
     Student student;
 
@@ -156,14 +162,20 @@ void Records::ask_input() {
 
         // Check if the student id is a duplicate
         if (is_id_duplicate(student)) {
-            cout << "\nERROR: Student ID must be unique" << endl;
+            clear();
+            cout << "----------------------------------------------------------" << '\n';
+            cout << "            ERROR: Student ID must be unique              " << '\n';
+            cout << "----------------------------------------------------------" << endl;
             pause();
             continue;
         }
 
         // Check if the student id is valid
         if (is_id_invalid(student)) {
-            cout << "\nERROR: Student ID must be numeric" << endl;
+            clear();
+            cout << "----------------------------------------------------------" << '\n';
+            cout << "            ERROR: Student ID must be numeric             " << '\n';
+            cout << "----------------------------------------------------------" << endl;
             pause();
             continue;
         }
@@ -172,40 +184,55 @@ void Records::ask_input() {
     }
 
     add_record(student);
-    pause();
 }
 
+// Adds the student record to the records list
 void Records::add_record(Student student) {
     Node* node = new Node;
     node->data = student;
     node->next = nullptr;
 
+    // If the list is empty, set the head and tail to the new node
     if (head == nullptr) {
         head = node;
         tail = node;
-    } else {
+
+    // Otherwise, set the new node as the tail
+    } else { 
         node->prev = tail;
         tail->next = node;
         tail = tail->next;
     }
+
     export_to_txt();
 }
 
+// Deletes a record from the records list
 void Records::delete_record() {
     Search search_method = ask_search_method();
     Node* record = search_record(Action::DELETE, search_method);
-    if (record == nullptr)
+
+    if (record == nullptr) {
+        cout << "----------------------------------------------------------" << '\n';
+        cout << "                 ERROR: Record not found                  " << '\n';
+        cout << "----------------------------------------------------------" << endl;
         return;
+    }
 
     Node* tmp = record;
 
+    // If the record is the only record in the list, delete it and set head and tail to nullptr
     if (record == head) {
         head = record->next;
         delete tmp;
+
+    // If the record is the tail, delete it and set the tail to the previous node
     } else if (record == tail) {
         tmp = record->prev;
         tmp->next = nullptr;
         delete record;
+
+    // Otherwise, delete the record and set the next and previous nodes to the nodes adjacent to the record
     } else {
         tmp = record->prev;
         tmp = record->next;
@@ -214,21 +241,29 @@ void Records::delete_record() {
 
     export_to_txt();
 
-    cout << "Record deleted";
-    pause();
+    cout << "----------------------------------------------------------" << '\n';
+    cout << "          SUCCESS: Record has been deleted                " << '\n';
+    cout << "----------------------------------------------------------" << endl;
 }
 
+// Displays records that match the search criteria
 void Records::display_specific() {
     Search search_method = ask_search_method();
     Node* result = search_record(Action::DISPLAY, search_method);
     cout << flush;
+    // If no record is found, display an error message and return to the main menu
     if (result == nullptr) {
-        cout << "Record not found";
+        cout << "----------------------------------------------------------" << '\n';
+        cout << "                 ERROR: Record not found                  " << '\n';
+        cout << "----------------------------------------------------------" << endl;
         return;
     }
+
+    // Otherwise, display the records that match the search criteria
     display_records(result);
 }
 
+// Displays passed records in a formatted way
 void Records::display_records(const Node* record) {
     cout << setfill('-') << setw(157) << "-" << '\n' << setfill(' ');
     cout << left << "| ";
@@ -254,6 +289,7 @@ void Records::display_records(const Node* record) {
     cout << setfill('-') << setw(157) << "-" << '\n' << setfill(' ');
 }
 
+// Asks the user to choose the search method
 Search Records::ask_search_method() {
     int method;
     while (true) {
@@ -272,60 +308,69 @@ Search Records::ask_search_method() {
         clear_err();
     }
 
+    // Returns the enum that corresponds to the search method based on the user input
     return (method == 1) ? Search::ID : Search::NAME;
 }
 
+// Searches for a record based on the search method and search key
 Node* Records::search_record(Action action, Search search_method) {
     string input;
     cout << "Search Key: ";
     getline(cin >> ws, input);
     clear();
 
-    Node* traverse = get_head_node();
+    Node* current_node = get_head_node();
     Node* result_head = nullptr;
     Node* result = nullptr;
     string target;
 
     // The loop that runs when the search action is DELETE
-    while (traverse != nullptr && action == Action::DELETE) {
-        target = (search_method == Search::ID) ? traverse->data.id_number : traverse->data.full_name;
+    // Tries to find the record that matches the search key and returns it for deletion
+    while (current_node != nullptr && action == Action::DELETE) {
+        target = (search_method == Search::ID) ? current_node->data.id_number : current_node->data.full_name;
 
         if (target == input) {
-            result_head = traverse;
+            result_head = current_node;
             break;
         }
 
-        traverse = traverse->next;
+        current_node = current_node->next;
     }
 
     // The loop that runs when the search action is DISPLAY
-    while (traverse != nullptr && action == Action::DISPLAY) {
-        target = (search_method == Search::ID) ? traverse->data.id_number : traverse->data.full_name;
+    // Try to find all records that match the search key and add them to the result list
+    while (current_node != nullptr && action == Action::DISPLAY) {
+        target = (search_method == Search::ID) ? current_node->data.id_number : current_node->data.full_name;
         // If the current record does not contain the substring, proceed to next iteration
         if (target.find(input) == string::npos){
-            traverse = traverse->next;
+            current_node = current_node->next;
             continue;
         }
 
         // If it does contain the substring, create a new node and copy the data of the current node to it
         Node* tmp = new Node();
-        tmp->data = traverse->data;
+        tmp->data = current_node->data;
         tmp->next = nullptr;
 
+        // If the result list is empty, set the new node as the head
         if (result == nullptr) {
             result = tmp;
             result_head = result;
+
+        // Otherwise, set the new node as the next node of the last node in the result list
         } else {
             result->next = tmp;
             result = result->next;
         }
 
-        traverse = traverse->next;
+        // Move to the next node in the records list
+        current_node = current_node->next;
     }
 
     return result_head;
 }
 
+// Prints the record in a formatted way
 void Records::print(const Student* student) {
     cout << left << "| ";
     cout << setw(13) << student->id_number   << "| ";
@@ -338,6 +383,7 @@ void Records::print(const Student* student) {
 }
 
 
+// Checks if the student id is a duplicate
 bool Records::is_id_duplicate(Student student) {
     Node* tmp = head;
     while (tmp != nullptr) {
@@ -349,6 +395,7 @@ bool Records::is_id_duplicate(Student student) {
     return false;
 } 
 
+// Checks if the student id is invalid
 bool Records::is_id_invalid(Student student) {
     for (const char& student : student.id_number) {
         if (!isdigit(student))
@@ -357,11 +404,13 @@ bool Records::is_id_invalid(Student student) {
     return false;
 } 
 
+// Returns the head node of the records list
 Node* Records::get_head_node() const {
     Node* tmp = head;
     return tmp;
 }
 
+// Exports the records list to records.txt
 void Records::export_to_txt() {
     ofstream outf { "records.txt" };
     Node* tmp = head;

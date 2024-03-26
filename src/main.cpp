@@ -106,7 +106,8 @@ Records::Records() {
         getline(inf, student.degree_prog);
         getline(inf, student.year_level);
         add_record(student);
-        // Capture new line since each record is separated with new line in records.txt
+        // Capture new line since each record is separated 
+        // with new line in records.txt
         getline(inf, place_holder);
     }
 }
@@ -225,18 +226,21 @@ void Records::delete_record() {
 
     Node* tmp = record;
 
-    // If the record is the only record in the list, delete it and set head and tail to nullptr
+    // If the record is the only record in the list, 
+    // delete it and set head and tail to nullptr
     if (record == head) {
         head = record->next;
         delete tmp;
 
-    // If the record is the tail, delete it and set the tail to the previous node
+    // If the record is the tail, delete it 
+    // and set the tail to the previous node
     } else if (record == tail) {
         tmp = record->prev;
         tmp->next = nullptr;
         delete record;
 
-    // Otherwise, delete the record and set the next and previous nodes to the nodes adjacent to the record
+    // Otherwise, delete the record and set the next and 
+    // previous nodes to the nodes adjacent to the record
     } else {
         tmp = record->prev;
         tmp = record->next;
@@ -331,7 +335,9 @@ Node* Records::search_record(Action action, Search search_method) {
     // The loop that runs when the search action is DELETE
     // Tries to find the record that matches the search key and returns it for deletion
     while (current_node != nullptr && action == Action::DELETE) {
-        target = (search_method == Search::ID) ? current_node->data.id_number : current_node->data.full_name;
+        target = (search_method == Search::ID) 
+               ? current_node->data.id_number 
+               : current_node->data.full_name;
 
         if (target == input) {
             result_head = current_node;
